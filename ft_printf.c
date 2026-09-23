@@ -15,6 +15,7 @@ int	ft_printf(const char *Message, ...)
 		if (Message[i] == '%')
 		{
 			i++;
+            init_format(&format);
 			if (is_flags_valid((char *)Message, i) == 0)
 			{
 				i = stock_format(&format, (char *)Message, i);
@@ -36,8 +37,42 @@ int	ft_printf(const char *Message, ...)
 	va_end(args);
 	return (count);
 }
-int main()
+#include "ft_printf.h"
+
+/*int	main(void)
 {
-    ft_printf("j ai %%d",34);
-    return 0;
-}
+	int a;
+	int b;
+
+	printf("----- BASIC -----\n");
+	a = printf("printf   : [%s]\n", "hello");
+	b = ft_printf("ft_printf: [%s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	printf("----- WIDTH -----\n");
+	a = printf("printf   : [%10s]\n", "hello");
+	b = ft_printf("ft_printf: [%10s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	printf("----- LEFT ALIGN -----\n");
+	a = printf("printf   : [%-10s]\n", "hello");
+	b = ft_printf("ft_printf: [%-10s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	printf("----- PRECISION -----\n");
+	a = printf("printf   : [%.3s]\n", "hello");
+	b = ft_printf("ft_printf: [%.3s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	printf("----- WIDTH + PRECISION -----\n");
+	a = printf("printf   : [%10.3s]\n", "hello");
+	b = ft_printf("ft_printf: [%10.3s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	printf("----- LEFT + PRECISION -----\n");
+	a = printf("printf   : [%-10.3s]\n", "hello");
+	b = ft_printf("ft_printf: [%-10.3s]\n", "hello");
+	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
+
+	return (0);
+}*/

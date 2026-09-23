@@ -3,6 +3,7 @@
 
 # include <unistd.h>
 # include <stdarg.h>
+# include <stdio.h>
 
 typedef struct s_format
 {
@@ -230,7 +231,73 @@ void	print_signed(long long nb, int sign, int padding, t_format *format)
 	if (format->minus)
 		put_char_i(' ', padding);
 }
+int ft_str_len(char *str, int j)
+{
+    int i;
+    i = 0;
+    if(j == 0)
+    {  
+        while(str[i])
+            i++;
+    }
+    else 
+        {
+            while(str[i] && (i < j))
+                i++;
+        }
+    return (i);
 
+}
+void put_str(char *s , int j)
+{
+    int i;
+    i = 0;
+    if(j == 0)
+    {  
+        while(s[i])
+        {
+            write(1,&s[i], 1);
+            i++;
+        }
+    }
+    else 
+        {
+            while(s[i] && (i < j))
+            {
+                write(1,&s[i], 1);
+                i++;
+            }
+        }
+}
+void print_str(char *str,int padding, t_format *format)
+{
+	if (format->minus == 0 && format->zero == 0)
+		put_char_i(' ', padding);
+	put_str(str, format->precision);
+	if (format->minus == 1)
+		put_char_i(' ', padding);   
+}
+int hundel_string(va_list *args, t_format *format)
+{
+    int count;
+    char *str;
+    int padding;
+    count = 0;
+    str = va_arg(*args, char *);
+    if(!str[0])
+    {
+        write(1, "(null)",6);
+        return (6);
+    }
+    count = ft_str_len(str, format->precision);
+
+    padding = format->width - count;
+   
+    if(padding < 0)
+        padding = 0;
+    print_str(str,padding, format);
+    return (count + padding);
+}
 int	handel_signed(va_list *args, t_format *format)
 {
 	long long	nb;
@@ -259,7 +326,9 @@ int	hundelConversation(char c, va_list *args, t_format *format)
 {
 	if (c == 'd' || c == 'i')
 		return (handel_signed(args, format));
-	if (c == '%')
+    else if(c == 's')
+        return(hundel_string(args,format));
+	else if (c == '%')
 	{
 		write(1, "%", 1);
 		return (1);
