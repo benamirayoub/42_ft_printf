@@ -38,7 +38,6 @@ int	ft_printf(const char *Message, ...)
 	return (count);
 }
 #include "ft_printf.h"
-
 /*int	main(void)
 {
 	int a;
@@ -63,7 +62,7 @@ int	ft_printf(const char *Message, ...)
 	a = printf("printf   : [%.3s]\n", "hello");
 	b = ft_printf("ft_printf: [%.3s]\n", "hello");
 	printf("return: printf=%d | ft_printf=%d\n\n", a, b);
-
+	
 	printf("----- WIDTH + PRECISION -----\n");
 	a = printf("printf   : [%10.3s]\n", "hello");
 	b = ft_printf("ft_printf: [%10.3s]\n", "hello");

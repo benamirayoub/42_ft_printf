@@ -277,6 +277,14 @@ void print_str(char *str,int padding, t_format *format)
 	if (format->minus == 1)
 		put_char_i(' ', padding);   
 }
+void print_char(int str,int padding, t_format *format)
+{
+	if (format->minus == 0 && format->zero == 0)
+		put_char_i(' ', padding);
+	write(1, &str, 1);
+	if (format->minus == 1)
+		put_char_i(' ', padding);   
+}
 int hundel_string(va_list *args, t_format *format)
 {
     int count;
@@ -284,15 +292,8 @@ int hundel_string(va_list *args, t_format *format)
     int padding;
     count = 0;
     str = va_arg(*args, char *);
-    if(!str[0])
-    {
-        write(1, "(null)",6);
-        return (6);
-    }
     count = ft_str_len(str, format->precision);
-
     padding = format->width - count;
-   
     if(padding < 0)
         padding = 0;
     print_str(str,padding, format);
@@ -321,13 +322,25 @@ int	handel_signed(va_list *args, t_format *format)
 	print_signed(nb, sign, padding, format);
 	return (count + padding);
 }
-
+int hundel_char(va_list *args, t_format *format)
+{
+	int nb;
+	int padding;
+	nb = va_arg(*args, int);
+	padding = format->width - 1;
+	if(padding < 0)
+		padding = 0;
+	print_char(nb,padding, format);	
+	return (1 + padding);
+}
 int	hundelConversation(char c, va_list *args, t_format *format)
 {
 	if (c == 'd' || c == 'i')
 		return (handel_signed(args, format));
     else if(c == 's')
         return(hundel_string(args,format));
+	else if(c == 'c')
+		return(hundel_char(args, format));
 	else if (c == '%')
 	{
 		write(1, "%", 1);
