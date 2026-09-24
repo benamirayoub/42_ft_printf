@@ -3,7 +3,7 @@
 
 # include <unistd.h>
 # include <stdarg.h>
-# include <stdio.h>
+# include <stdlib.h>
 
 typedef struct s_format
 {
@@ -333,6 +333,112 @@ int hundel_char(va_list *args, t_format *format)
 	print_char(nb,padding, format);	
 	return (1 + padding);
 }
+int num_len_x(long long nb)
+{
+	int i;
+	i = 0;
+	if(nb == 0)
+		return 1;
+	while(nb >0)
+	{
+		nb = nb /16;
+		i++;
+	}
+	return (i);
+}
+char *ft_range(int num)
+{
+	char *copy;
+	copy = malloc(sizeof(char)*(num + 1));
+	if(!copy)
+		return 0;
+	return copy;
+}
+void put_h(char * num , unsigned int nb, char c)
+{
+	const char *tab_hex = "0123456789abcdef";
+	const char *tab_heX = "0123456789ABCDEF";
+	int i;
+	i = num_len_x((long long)nb) - 1;
+	num[i] = '\0';
+		if (nb == 0)
+	{
+		num[0] = '0';
+		return ;
+	}
+	while((nb > 0 && c == 'x') )
+	{
+		num[i] = tab_hex[(nb%16)];
+		nb = nb / 16;
+		i--;
+	}
+	while((nb>0 && c == 'X'))
+	{
+		num[i] = tab_heX[(nb%16)];
+		nb = nb / 16;
+		i--;
+	}
+}
+void put_str_hx(char *str)
+{
+	int i;
+	i = 0;
+	while(str[i])
+	{
+		write(1, &str[i], 1);
+		i++;
+	}
+}
+void put_number_x(unsigned int nb , char c, int precision, int point)
+{
+	char *number;
+	int		len;
+
+	len = num_len_x(nb);
+	if (point && precision > len)
+	{
+		put_char_i('0', precision - len);
+	}
+	if (point && precision == 0 && nb == 0)
+		return ;
+	number = ft_range(num_len_x((long long)nb));
+	put_h(number, nb, c);
+	put_str_hx(number);
+}
+void print_hex(unsigned int nb,int padding , t_format *format , char c)
+{
+	if (!format->minus && !format->zero)
+		put_char_i(' ', padding);
+	if(format->hash && nb != 0)
+	{
+		if(c == 'x')
+			write(1, "0x", 2);
+		else
+			write(1, "0X", 2);
+	}
+	if (!format->minus && format->zero && !format->point)
+		put_char_i('0', padding);
+	put_number_x(nb, c, format->precision, format->point);
+	if (format->minus)
+		put_char_i(' ', padding);
+}
+int hundel_hex(va_list *args, t_format *format, char c)
+{
+	unsigned int	nb;
+	int			count;
+	int			padding;
+
+	nb = va_arg(*args, unsigned int);
+	count = num_len_x(nb) ;
+	if (format->point && format->precision > count)
+		count = format->precision;
+	padding = format->width - count - (format->hash)*2;
+	if (padding < 0)
+		padding = 0;
+	print_hex(nb , padding , format , c);
+	return (count + padding  + (format->hash != 0)*2);
+
+}
 int	hundelConversation(char c, va_list *args, t_format *format)
 {
 	if (c == 'd' || c == 'i')
@@ -341,6 +447,10 @@ int	hundelConversation(char c, va_list *args, t_format *format)
         return(hundel_string(args,format));
 	else if(c == 'c')
 		return(hundel_char(args, format));
+	else if(c == 'x' || c == 'X')
+	{
+		return (hundel_hex(args, format, c));
+	}
 	else if (c == '%')
 	{
 		write(1, "%", 1);
