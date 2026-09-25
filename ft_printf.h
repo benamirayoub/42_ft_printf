@@ -182,10 +182,14 @@ void	put_char_i(char c, int n)
 int	num_len(long long nb)
 {
 	int	len;
-
+	len = 0;
 	if (nb == 0)
 		return (1);
-	len = 0;
+	if(nb < 0)
+	{
+		nb = -nb;
+		len++;
+	}
 	while (nb > 0)
 	{
 		nb /= 10;
@@ -198,6 +202,11 @@ void	put_number(long long nb)
 {
 	char	c;
 
+	if(nb < 0)
+	{
+		write(1, "-", 1);
+		nb = -nb;
+	}
 	if (nb >= 10)
 		put_number(nb / 10);
 	c = (nb % 10) + '0';
@@ -439,6 +448,40 @@ int hundel_hex(va_list *args, t_format *format, char c)
 	return (count + padding  + (format->hash != 0)*2);
 
 }
+void	print_unsigned(unsigned int nb,int padding, t_format *format)
+{
+	if (!format->minus && (!format->zero || format->point))
+		put_char_i(' ', padding);
+	if (!format->minus && format->zero && !format->point)
+		put_char_i('0', padding);
+	if (format->point && format->precision == 0 && nb == 0)
+		return;
+	if (format->point && format->precision > num_len(nb))
+		put_char_i('0', format->precision - num_len(nb));
+	put_number(nb);
+	if (format->minus)
+		put_char_i(' ', padding);
+}
+int hundel_unsigned(va_list *args, t_format *format)
+{
+	unsigned int	nb;
+	int			count;
+	int			padding;
+
+	nb = va_arg(*args, unsigned int);
+
+	count = num_len(nb) ;
+	if (format->point && format->precision == 0 && nb == 0)
+		count = 0;
+	else if (format->point && format->precision > count)
+		count = format->precision;
+	padding = format->width - count;
+	if (padding < 0)
+		padding = 0;
+	print_unsigned(nb, padding, format);
+	return (count + padding);
+}
+
 int	hundelConversation(char c, va_list *args, t_format *format)
 {
 	if (c == 'd' || c == 'i')
@@ -448,9 +491,9 @@ int	hundelConversation(char c, va_list *args, t_format *format)
 	else if(c == 'c')
 		return(hundel_char(args, format));
 	else if(c == 'x' || c == 'X')
-	{
 		return (hundel_hex(args, format, c));
-	}
+	else if(c == 'u')
+		return(hundel_unsigned(args, format));
 	else if (c == '%')
 	{
 		write(1, "%", 1);
