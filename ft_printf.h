@@ -17,6 +17,10 @@ typedef struct s_format
 	int	space;
 	int	length;
 }	t_format;
+void put_char(char c)
+{ 
+	write(1, &c, 1);
+}
 
 int	stock_flags(t_format *format, char *message, int i)
 {
@@ -479,6 +483,66 @@ int hundel_unsigned(va_list *args, t_format *format)
 	if (padding < 0)
 		padding = 0;
 	print_unsigned(nb, padding, format);
+	return (count + padding + format->hash);
+}
+
+void print_o(unsigned int num)
+{
+    const char *tab_oct;
+    tab_oct = "01234567";
+    if(num >= 8)
+    {
+        print_o(num/8);
+    }
+    put_char(tab_oct[num%8]);
+}
+int len_num_o(unsigned int nb)
+{
+	int count ;
+	count = 0;
+	if(nb == 0)
+		return 1;
+	while(nb >0)
+	{
+		nb = nb / 8;
+		count++;
+	}
+	return (count);
+}
+
+void print_octel(unsigned int nb,int padding, t_format *format)
+{	if (!format->minus && (!format->zero || format->point))
+		put_char_i(' ', padding);
+	if (!format->minus && format->zero && !format->point)
+		put_char_i('0', padding);
+	if (format->hash && nb != 0 && !format->point)
+		write(1, "0", 1);
+	if (format->point && format->precision > num_len(nb))
+		put_char_i('0', format->precision - num_len(nb));
+	print_o(nb);
+	if (format->minus)
+		put_char_i(' ', padding);
+	}
+
+int hundel_octel(va_list *args , t_format *format)
+{
+	unsigned int	nb;
+	int			count;
+	int			padding;
+
+	nb = va_arg(*args, unsigned int);
+
+	count = len_num_o(nb) ;
+	if (format->point && format->precision == 0 && nb == 0)
+		count = 0;
+	if (format->point && format->precision > count)
+		count = format->precision;
+	if (format->hash && nb != 0 && format->precision < count)
+		count++;
+	padding = format->width - count;
+	if (padding < 0)
+		padding = 0;
+	print_octel(nb, padding, format);
 	return (count + padding);
 }
 
@@ -494,6 +558,8 @@ int	hundelConversation(char c, va_list *args, t_format *format)
 		return (hundel_hex(args, format, c));
 	else if(c == 'u')
 		return(hundel_unsigned(args, format));
+	else if(c == 'O' || c == 'o')
+		return(hundel_octel(args, format));
 	else if (c == '%')
 	{
 		write(1, "%", 1);
