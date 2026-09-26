@@ -4,6 +4,9 @@
 # include <unistd.h>
 # include <stdarg.h>
 # include <stdlib.h>
+# include <stdint.h>
+# include <stddef.h>
+# include <stdio.h>
 
 typedef struct s_format
 {
@@ -216,6 +219,14 @@ void	put_number(long long nb)
 	c = (nb % 10) + '0';
 	write(1, &c, 1);
 }
+void	put_number_u(unsigned long long nb)
+{
+	char	c;
+	if (nb >= 10)
+		put_number(nb / 10);
+	c = (nb % 10) + '0';
+	write(1, &c, 1);
+}
 
 long long	signed_value(va_list *args, t_format *format)
 {
@@ -227,19 +238,42 @@ long long	signed_value(va_list *args, t_format *format)
 		return (va_arg(*args, long));
 	if (format->length == 4)
 		return (va_arg(*args, long long));
+	if (format->length == 5)
+		return (va_arg(*args, uintmax_t));
+	if (format->length == 6)
+		return (va_arg(*args, size_t));
 	return (va_arg(*args, int));
 }
-
+unsigned long long	unsigned_value(va_list *args, t_format *format)
+{
+	if (format->length == 2)
+		return ((unsigned char)va_arg(*args, unsigned int));
+	if (format->length == 1)
+		return ((unsigned short)va_arg(*args, unsigned int));
+	if (format->length == 3)
+		return (va_arg(*args, unsigned long));
+	if (format->length == 4)
+		return (va_arg(*args, unsigned long long));
+	if (format->length == 5)
+		return (va_arg(*args, uintmax_t));
+	if (format->length == 6)
+		return (va_arg(*args, size_t));
+	return (va_arg(*args, unsigned int));
+}
 void	print_signed(long long nb, int sign, int padding, t_format *format)
 {
-	if (!format->minus && !format->zero)
+	if (!format->minus && (!format->zero || format->point))
 		put_char_i(' ', padding);
 	if (sign == -1)
 		write(1, "-", 1);
 	else if (sign == 1)
 		write(1, "+", 1);
-	if (!format->minus && format->zero)
+	if (!format->minus && format->zero && !format->point)
 		put_char_i('0', padding);
+	if (format->point && format->precision == 0 && nb == 0)
+		return;
+	if(format->point && format->precision > num_len(nb))
+		put_char_i('0', format->precision - num_len(nb));
 	put_number(nb);
 	if (format->minus)
 		put_char_i(' ', padding);
@@ -328,7 +362,13 @@ int	handel_signed(va_list *args, t_format *format)
 	}
 	else if (format->plus)
 		sign = 1;
-	count = num_len(nb) + (sign != 0);
+	count = num_len(nb) ;
+	if (format->point && format->precision == 0 && nb == 0)
+		count = 0;
+	if (format->point && format->precision > count)
+		count = format->precision;
+	if (sign != 0)
+		count++;
 	padding = format->width - count;
 	if (padding < 0)
 		padding = 0;
@@ -346,7 +386,7 @@ int hundel_char(va_list *args, t_format *format)
 	print_char(nb,padding, format);	
 	return (1 + padding);
 }
-int num_len_x(long long nb)
+int num_len_x(unsigned long nb)
 {
 	int i;
 	i = 0;
@@ -367,12 +407,12 @@ char *ft_range(int num)
 		return 0;
 	return copy;
 }
-void put_h(char * num , unsigned int nb, char c)
+void put_h(char * num , unsigned long nb, char c)
 {
 	const char *tab_hex = "0123456789abcdef";
 	const char *tab_heX = "0123456789ABCDEF";
 	int i;
-	i = num_len_x((long long)nb) - 1;
+	i = num_len_x(nb) - 1;
 	num[i] = '\0';
 		if (nb == 0)
 	{
@@ -402,7 +442,7 @@ void put_str_hx(char *str)
 		i++;
 	}
 }
-void put_number_x(unsigned int nb , char c, int precision, int point)
+void put_number_x(unsigned long long nb , char c, int precision, int point)
 {
 	char *number;
 	int		len;
@@ -414,11 +454,11 @@ void put_number_x(unsigned int nb , char c, int precision, int point)
 	}
 	if (point && precision == 0 && nb == 0)
 		return ;
-	number = ft_range(num_len_x((long long)nb));
+	number = ft_range(num_len_x(nb));
 	put_h(number, nb, c);
 	put_str_hx(number);
 }
-void print_hex(unsigned int nb,int padding , t_format *format , char c)
+void print_hex(unsigned long long nb,int padding , t_format *format , char c)
 {
 	if (!format->minus && !format->zero)
 		put_char_i(' ', padding);
@@ -437,11 +477,11 @@ void print_hex(unsigned int nb,int padding , t_format *format , char c)
 }
 int hundel_hex(va_list *args, t_format *format, char c)
 {
-	unsigned int	nb;
+	unsigned long long 	nb;
 	int			count;
 	int			padding;
 
-	nb = va_arg(*args, unsigned int);
+	nb = unsigned_value(args, format);
 	count = num_len_x(nb) ;
 	if (format->point && format->precision > count)
 		count = format->precision;
@@ -452,7 +492,7 @@ int hundel_hex(va_list *args, t_format *format, char c)
 	return (count + padding  + (format->hash != 0)*2);
 
 }
-void	print_unsigned(unsigned int nb,int padding, t_format *format)
+void	print_unsigned(unsigned long long nb,int padding, t_format *format)
 {
 	if (!format->minus && (!format->zero || format->point))
 		put_char_i(' ', padding);
@@ -462,17 +502,17 @@ void	print_unsigned(unsigned int nb,int padding, t_format *format)
 		return;
 	if (format->point && format->precision > num_len(nb))
 		put_char_i('0', format->precision - num_len(nb));
-	put_number(nb);
+	put_number_u(nb);
 	if (format->minus)
 		put_char_i(' ', padding);
 }
 int hundel_unsigned(va_list *args, t_format *format)
 {
-	unsigned int	nb;
+	unsigned long long	nb;
 	int			count;
 	int			padding;
 
-	nb = va_arg(*args, unsigned int);
+	nb = unsigned_value(args, format);
 
 	count = num_len(nb) ;
 	if (format->point && format->precision == 0 && nb == 0)
@@ -486,7 +526,7 @@ int hundel_unsigned(va_list *args, t_format *format)
 	return (count + padding + format->hash);
 }
 
-void print_o(unsigned int num)
+void print_o(unsigned long long num)
 {
     const char *tab_oct;
     tab_oct = "01234567";
@@ -496,7 +536,7 @@ void print_o(unsigned int num)
     }
     put_char(tab_oct[num%8]);
 }
-int len_num_o(unsigned int nb)
+int len_num_o(unsigned long long nb)
 {
 	int count ;
 	count = 0;
@@ -510,11 +550,13 @@ int len_num_o(unsigned int nb)
 	return (count);
 }
 
-void print_octel(unsigned int nb,int padding, t_format *format)
+void print_octel(unsigned long long nb,int padding, t_format *format)
 {	if (!format->minus && (!format->zero || format->point))
 		put_char_i(' ', padding);
 	if (!format->minus && format->zero && !format->point)
 		put_char_i('0', padding);
+	if (format->point && format->precision == 0 && nb == 0)
+		return;
 	if (format->hash && nb != 0 && !format->point)
 		write(1, "0", 1);
 	if (format->point && format->precision > num_len(nb))
@@ -526,11 +568,11 @@ void print_octel(unsigned int nb,int padding, t_format *format)
 
 int hundel_octel(va_list *args , t_format *format)
 {
-	unsigned int	nb;
+	unsigned long long	nb;
 	int			count;
 	int			padding;
 
-	nb = va_arg(*args, unsigned int);
+	nb = unsigned_value(args, format);
 
 	count = len_num_o(nb) ;
 	if (format->point && format->precision == 0 && nb == 0)
@@ -544,6 +586,39 @@ int hundel_octel(va_list *args , t_format *format)
 		padding = 0;
 	print_octel(nb, padding, format);
 	return (count + padding);
+}
+void print_pointer(unsigned long nb , int padding, t_format *format)
+{
+	if (!format->minus && !format->zero)
+		put_char_i(' ', padding);
+	write(1, "0x", 2);
+	if (!format->minus && format->zero && !format->point)
+		put_char_i('0', padding);
+	put_number_x(nb, 'x', format->precision, format->point);
+	if (format->minus)
+		put_char_i(' ', padding);
+}
+int hundel_pointer(va_list *args, t_format *format)
+{
+	void *adress;
+	int count;
+	int padding;
+	unsigned long nb;
+	adress = va_arg(*args, void *);
+	if (adress == NULL)
+	{
+		write(1, "(nil)", 5);
+		return (5);
+	}
+	nb = (unsigned long)adress;
+	count = num_len_x(nb);
+	if (format->point && format->precision > count)
+		count = format->precision;
+	padding = format->width - count - 2;
+	if (padding < 0)
+		padding = 0;
+	print_pointer(nb , padding , format );
+	return (count + padding  + 2);
 }
 
 int	hundelConversation(char c, va_list *args, t_format *format)
@@ -560,6 +635,8 @@ int	hundelConversation(char c, va_list *args, t_format *format)
 		return(hundel_unsigned(args, format));
 	else if(c == 'O' || c == 'o')
 		return(hundel_octel(args, format));
+	else if (c == 'p')
+		return(hundel_pointer(args, format) + 2);
 	else if (c == '%')
 	{
 		write(1, "%", 1);
