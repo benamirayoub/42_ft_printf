@@ -1,4 +1,5 @@
 SRCS = ft_atoi.c ft_isdigit.c ft_isprint.c ft_isalpha.c ft_isalnum.c \
+		ft_put_char.c ft_putchar_fd.c ft_putnbr_fd.c ft_putstr_fd.c ft_strdup.c ft_strlcat.c \
 
 OBJS = ${SRCS:.c=.o}
 
