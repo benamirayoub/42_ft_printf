@@ -24,4 +24,5 @@ char	*ft_strnstr(const char *str, const char *to_find, size_t len);
 void	*ft_memcpy(void *dest, const void *src, size_t n);
 int		ft_memcmp(const void *s1, const void *s2, size_t n);
 char	*ft_itoa(int n);
+char	**ft_split(char const *s, char c);
 #endif
